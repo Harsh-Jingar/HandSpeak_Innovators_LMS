@@ -6,19 +6,21 @@ import { Link } from "wouter";
 
 export default function CourseCard({ course }: { course: Course }) {
   return (
-    <Card className="overflow-hidden flex flex-col">
-      <img
-        src={course.imageUrl}
-        alt={course.title}
-        className="h-48 w-full object-cover"
-      />
-      <CardHeader>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="px-2 py-1 bg-primary/10 text-primary text-sm rounded">
+    <Card className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300">
+      <div className="relative">
+        <img
+          src={course.imageUrl}
+          alt={course.title}
+          className="h-48 w-full object-cover hover:scale-105 transition-transform duration-300"
+        />
+        <div className="absolute top-4 right-4">
+          <span className="px-3 py-1 bg-primary text-white text-sm rounded-full font-medium">
             {course.language}
           </span>
         </div>
-        <CardTitle>{course.title}</CardTitle>
+      </div>
+      <CardHeader>
+        <CardTitle className="text-xl">{course.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-muted-foreground">{course.description}</p>

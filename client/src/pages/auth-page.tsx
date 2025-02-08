@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema } from "@shared/schema";
-import { Loader2 } from "lucide-react";
+import { Loader2, HandMetal } from "lucide-react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -23,8 +23,11 @@ export default function AuthPage() {
     <div className="min-h-screen grid md:grid-cols-2">
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Welcome to SignLearn</CardTitle>
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <HandMetal className="h-12 w-12 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Welcome to HandSpeak Innovators</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
@@ -32,11 +35,11 @@ export default function AuthPage() {
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login">
                 <LoginForm />
               </TabsContent>
-              
+
               <TabsContent value="register">
                 <RegisterForm />
               </TabsContent>
@@ -44,13 +47,15 @@ export default function AuthPage() {
           </CardContent>
         </Card>
       </div>
-      
-      <div className="hidden md:flex bg-muted items-center justify-center p-8">
+
+      <div className="hidden md:flex bg-primary/5 items-center justify-center p-8">
         <div className="max-w-md space-y-4">
-          <h2 className="text-3xl font-bold">Learn Sign Language Online</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 text-transparent bg-clip-text">
+            Learn Sign Language Online
+          </h2>
+          <p className="text-muted-foreground text-lg">
             Access comprehensive courses in ASL, BSL, ISL and more. Track your progress
-            and learn at your own pace.
+            and learn at your own pace with HandSpeak Innovators.
           </p>
         </div>
       </div>
