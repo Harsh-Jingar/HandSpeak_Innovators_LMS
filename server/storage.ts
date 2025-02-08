@@ -1,5 +1,5 @@
-import { users, courses, modules, userProgress } from "@shared/schema";
-import type { User, InsertUser, Course, Module, UserProgress } from "@shared/schema";
+import { users, courses, modules, lessons, userProgress } from "@shared/schema";
+import type { User, InsertUser, Course, Module, Lesson, UserProgress } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -13,8 +13,10 @@ export interface IStorage {
   getCourse(id: number): Promise<Course | undefined>;
   getModules(courseId: number): Promise<Module[]>;
   getModule(id: number): Promise<Module | undefined>;
+  getLessons(moduleId: number): Promise<Lesson[]>;
+  getLesson(id: number): Promise<Lesson | undefined>;
   getUserProgress(userId: number): Promise<UserProgress[]>;
-  updateProgress(userId: number, moduleId: number, progress: number): Promise<void>;
+  updateProgress(userId: number, lessonId: number, progress: number): Promise<void>;
   sessionStore: session.SessionStore;
 }
 
@@ -22,6 +24,7 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private courses: Map<number, Course>;
   private modules: Map<number, Module>;
+  private lessons: Map<number, Lesson>;
   private progress: Map<string, UserProgress>;
   currentId: number;
   sessionStore: session.SessionStore;
@@ -30,13 +33,14 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.courses = new Map();
     this.modules = new Map();
+    this.lessons = new Map();
     this.progress = new Map();
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
 
-    // Seed courses and modules
+    // Seed courses, modules and lessons
     this.seedCoursesAndModules();
   }
 
@@ -79,7 +83,6 @@ export class MemStorage implements IStorage {
         title: "ASL Numbers (1-20)",
         description: "Learn to count and express numbers in ASL",
         type: "numbers",
-        videoUrl: "https://www.signasl.org/videos/numbers_1-20.mp4",
         order: 1,
       },
       {
@@ -88,7 +91,6 @@ export class MemStorage implements IStorage {
         title: "ASL Alphabet",
         description: "Master the ASL alphabet and fingerspelling",
         type: "alphabets",
-        videoUrl: "https://www.signasl.org/videos/alphabet.mp4",
         order: 2,
       },
       {
@@ -97,51 +99,70 @@ export class MemStorage implements IStorage {
         title: "Basic Greetings",
         description: "Learn common greetings and introductions",
         type: "words",
-        videoUrl: "https://www.signasl.org/videos/greetings.mp4",
         order: 3,
       },
-      // BSL Modules
+    ];
+
+    // Sample lessons for ASL Alphabet module
+    const alphabetLessons: Lesson[] = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').map((letter, index) => ({
+      id: index + 1,
+      moduleId: 2, // ASL Alphabet module
+      title: `Letter ${letter}`,
+      description: `Learn how to sign the letter ${letter} in ASL`,
+      videoUrl: `https://www.signasl.org/videos/alphabet/${letter.toLowerCase()}.mp4`,
+      order: index + 1,
+      duration: 60, // 1 minute per letter
+    }));
+
+    // Sample lessons for Numbers module
+    const numberLessons: Lesson[] = Array.from({ length: 20 }, (_, i) => ({
+      id: 27 + i, // continue after alphabet
+      moduleId: 1, // ASL Numbers module
+      title: `Number ${i + 1}`,
+      description: `Learn how to sign the number ${i + 1} in ASL`,
+      videoUrl: `https://www.signasl.org/videos/numbers/${i + 1}.mp4`,
+      order: i + 1,
+      duration: 45, // 45 seconds per number
+    }));
+
+    // Sample lessons for Basic Greetings
+    const greetingLessons: Lesson[] = [
       {
-        id: 4,
-        courseId: 2,
-        title: "BSL Numbers (1-20)",
-        description: "Learn to count in British Sign Language",
-        type: "numbers",
-        videoUrl: "https://www.british-sign.co.uk/videos/numbers_1-20.mp4",
+        id: 47,
+        moduleId: 3,
+        title: "Hello",
+        description: "Learn to say 'Hello' in ASL",
+        videoUrl: "https://www.signasl.org/videos/greetings/hello.mp4",
         order: 1,
+        duration: 90,
       },
       {
-        id: 5,
-        courseId: 2,
-        title: "BSL Alphabet",
-        description: "Learn the BSL alphabet",
-        type: "alphabets",
-        videoUrl: "https://www.british-sign.co.uk/videos/alphabet.mp4",
+        id: 48,
+        moduleId: 3,
+        title: "How are you?",
+        description: "Learn to ask 'How are you?' in ASL",
+        videoUrl: "https://www.signasl.org/videos/greetings/how_are_you.mp4",
         order: 2,
-      },
-      // ISL Modules
-      {
-        id: 6,
-        courseId: 3,
-        title: "ISL Numbers (1-20)",
-        description: "Learn to count in Indian Sign Language",
-        type: "numbers",
-        videoUrl: "https://www.indiansignlanguage.org/videos/numbers_1-20.mp4",
-        order: 1,
+        duration: 120,
       },
       {
-        id: 7,
-        courseId: 3,
-        title: "ISL Alphabet",
-        description: "Master the ISL alphabet",
-        type: "alphabets",
-        videoUrl: "https://www.indiansignlanguage.org/videos/alphabet.mp4",
-        order: 2,
+        id: 49,
+        moduleId: 3,
+        title: "Good morning",
+        description: "Learn to say 'Good morning' in ASL",
+        videoUrl: "https://www.signasl.org/videos/greetings/good_morning.mp4",
+        order: 3,
+        duration: 90,
       },
     ];
 
     sampleCourses.forEach(course => this.courses.set(course.id, course));
     sampleModules.forEach(module => this.modules.set(module.id, module));
+
+    // Add all lessons
+    [...alphabetLessons, ...numberLessons, ...greetingLessons].forEach(lesson => 
+      this.lessons.set(lesson.id, lesson)
+    );
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -179,12 +200,22 @@ export class MemStorage implements IStorage {
     return this.modules.get(id);
   }
 
+  async getLessons(moduleId: number): Promise<Lesson[]> {
+    return Array.from(this.lessons.values())
+      .filter(l => l.moduleId === moduleId)
+      .sort((a, b) => a.order - b.order);
+  }
+
+  async getLesson(id: number): Promise<Lesson | undefined> {
+    return this.lessons.get(id);
+  }
+
   async getUserProgress(userId: number): Promise<UserProgress[]> {
     return Array.from(this.progress.values()).filter(p => p.userId === userId);
   }
 
-  async updateProgress(userId: number, moduleId: number, progress: number): Promise<void> {
-    const key = `${userId}-${moduleId}`;
+  async updateProgress(userId: number, lessonId: number, progress: number): Promise<void> {
+    const key = `${userId}-${lessonId}`;
     const existing = this.progress.get(key);
 
     if (existing) {
@@ -197,7 +228,7 @@ export class MemStorage implements IStorage {
       this.progress.set(key, {
         id: this.currentId++,
         userId,
-        moduleId,
+        lessonId,
         progress,
         completed: progress === 100
       });

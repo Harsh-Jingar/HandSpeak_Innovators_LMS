@@ -34,6 +34,20 @@ export function registerRoutes(app: Express): Server {
     res.json(module);
   });
 
+  app.get("/api/modules/:id/lessons", async (req, res) => {
+    const lessons = await storage.getLessons(parseInt(req.params.id));
+    res.json(lessons);
+  });
+
+  app.get("/api/lessons/:id", async (req, res) => {
+    const lesson = await storage.getLesson(parseInt(req.params.id));
+    if (!lesson) {
+      res.status(404).send("Lesson not found");
+      return;
+    }
+    res.json(lesson);
+  });
+
   app.get("/api/progress", async (req, res) => {
     if (!req.user) {
       res.status(401).send("Unauthorized");
@@ -43,13 +57,13 @@ export function registerRoutes(app: Express): Server {
     res.json(progress);
   });
 
-  app.post("/api/progress/:moduleId", async (req, res) => {
+  app.post("/api/progress/:lessonId", async (req, res) => {
     if (!req.user) {
       res.status(401).send("Unauthorized");
       return;
     }
 
-    const moduleId = parseInt(req.params.moduleId);
+    const lessonId = parseInt(req.params.lessonId);
     const progress = parseInt(req.body.progress);
 
     if (isNaN(progress) || progress < 0 || progress > 100) {
@@ -57,7 +71,7 @@ export function registerRoutes(app: Express): Server {
       return;
     }
 
-    await storage.updateProgress(req.user.id, moduleId, progress);
+    await storage.updateProgress(req.user.id, lessonId, progress);
     res.sendStatus(200);
   });
 
