@@ -25,6 +25,15 @@ export function registerRoutes(app: Express): Server {
     res.json(modules);
   });
 
+  app.get("/api/modules/:id", async (req, res) => {
+    const module = await storage.getModule(parseInt(req.params.id));
+    if (!module) {
+      res.status(404).send("Module not found");
+      return;
+    }
+    res.json(module);
+  });
+
   app.get("/api/progress", async (req, res) => {
     if (!req.user) {
       res.status(401).send("Unauthorized");

@@ -12,6 +12,7 @@ export interface IStorage {
   getCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
   getModules(courseId: number): Promise<Module[]>;
+  getModule(id: number): Promise<Module | undefined>;
   getUserProgress(userId: number): Promise<UserProgress[]>;
   updateProgress(userId: number, moduleId: number, progress: number): Promise<void>;
   sessionStore: session.SessionStore;
@@ -78,7 +79,7 @@ export class MemStorage implements IStorage {
         title: "ASL Numbers (1-20)",
         description: "Learn to count and express numbers in ASL",
         type: "numbers",
-        videoUrl: "https://example.com/asl/numbers.mp4",
+        videoUrl: "https://www.signasl.org/videos/numbers_1-20.mp4",
         order: 1,
       },
       {
@@ -87,7 +88,7 @@ export class MemStorage implements IStorage {
         title: "ASL Alphabet",
         description: "Master the ASL alphabet and fingerspelling",
         type: "alphabets",
-        videoUrl: "https://example.com/asl/alphabet.mp4",
+        videoUrl: "https://www.signasl.org/videos/alphabet.mp4",
         order: 2,
       },
       {
@@ -96,7 +97,7 @@ export class MemStorage implements IStorage {
         title: "Basic Greetings",
         description: "Learn common greetings and introductions",
         type: "words",
-        videoUrl: "https://example.com/asl/greetings.mp4",
+        videoUrl: "https://www.signasl.org/videos/greetings.mp4",
         order: 3,
       },
       // BSL Modules
@@ -106,7 +107,7 @@ export class MemStorage implements IStorage {
         title: "BSL Numbers (1-20)",
         description: "Learn to count in British Sign Language",
         type: "numbers",
-        videoUrl: "https://example.com/bsl/numbers.mp4",
+        videoUrl: "https://www.british-sign.co.uk/videos/numbers_1-20.mp4",
         order: 1,
       },
       {
@@ -115,7 +116,7 @@ export class MemStorage implements IStorage {
         title: "BSL Alphabet",
         description: "Learn the BSL alphabet",
         type: "alphabets",
-        videoUrl: "https://example.com/bsl/alphabet.mp4",
+        videoUrl: "https://www.british-sign.co.uk/videos/alphabet.mp4",
         order: 2,
       },
       // ISL Modules
@@ -125,7 +126,7 @@ export class MemStorage implements IStorage {
         title: "ISL Numbers (1-20)",
         description: "Learn to count in Indian Sign Language",
         type: "numbers",
-        videoUrl: "https://example.com/isl/numbers.mp4",
+        videoUrl: "https://www.indiansignlanguage.org/videos/numbers_1-20.mp4",
         order: 1,
       },
       {
@@ -134,7 +135,7 @@ export class MemStorage implements IStorage {
         title: "ISL Alphabet",
         description: "Master the ISL alphabet",
         type: "alphabets",
-        videoUrl: "https://example.com/isl/alphabet.mp4",
+        videoUrl: "https://www.indiansignlanguage.org/videos/alphabet.mp4",
         order: 2,
       },
     ];
@@ -172,6 +173,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.modules.values())
       .filter(m => m.courseId === courseId)
       .sort((a, b) => a.order - b.order);
+  }
+
+  async getModule(id: number): Promise<Module | undefined> {
+    return this.modules.get(id);
   }
 
   async getUserProgress(userId: number): Promise<UserProgress[]> {
