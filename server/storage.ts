@@ -109,7 +109,7 @@ export class MemStorage implements IStorage {
       moduleId: 2, // ASL Alphabet module
       title: `Letter ${letter}`,
       description: `Learn how to sign the letter ${letter} in ASL`,
-      videoUrl: `https://www.signasl.org/videos/alphabet/${letter.toLowerCase()}.mp4`,
+      videoUrl: `https://www.signasl.org/sign/${letter.toLowerCase()}`,
       order: index + 1,
       duration: 60, // 1 minute per letter
     }));
@@ -120,7 +120,7 @@ export class MemStorage implements IStorage {
       moduleId: 1, // ASL Numbers module
       title: `Number ${i + 1}`,
       description: `Learn how to sign the number ${i + 1} in ASL`,
-      videoUrl: `https://www.signasl.org/videos/numbers/${i + 1}.mp4`,
+      videoUrl: `https://www.signasl.org/sign/${i + 1}`,
       order: i + 1,
       duration: 45, // 45 seconds per number
     }));
@@ -132,7 +132,7 @@ export class MemStorage implements IStorage {
         moduleId: 3,
         title: "Hello",
         description: "Learn to say 'Hello' in ASL",
-        videoUrl: "https://www.signasl.org/videos/greetings/hello.mp4",
+        videoUrl: "https://www.signasl.org/sign/hello",
         order: 1,
         duration: 90,
       },
@@ -141,7 +141,7 @@ export class MemStorage implements IStorage {
         moduleId: 3,
         title: "How are you?",
         description: "Learn to ask 'How are you?' in ASL",
-        videoUrl: "https://www.signasl.org/videos/greetings/how_are_you.mp4",
+        videoUrl: "https://www.signasl.org/sign/how-are-you",
         order: 2,
         duration: 120,
       },
@@ -150,7 +150,7 @@ export class MemStorage implements IStorage {
         moduleId: 3,
         title: "Good morning",
         description: "Learn to say 'Good morning' in ASL",
-        videoUrl: "https://www.signasl.org/videos/greetings/good_morning.mp4",
+        videoUrl: "https://www.signasl.org/sign/good-morning",
         order: 3,
         duration: 90,
       },
@@ -160,7 +160,7 @@ export class MemStorage implements IStorage {
     sampleModules.forEach(module => this.modules.set(module.id, module));
 
     // Add all lessons
-    [...alphabetLessons, ...numberLessons, ...greetingLessons].forEach(lesson => 
+    [...alphabetLessons, ...numberLessons, ...greetingLessons].forEach(lesson =>
       this.lessons.set(lesson.id, lesson)
     );
   }
