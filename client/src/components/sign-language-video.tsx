@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Loader2, Play } from "lucide-react";
@@ -7,18 +8,17 @@ interface SignLanguageVideoProps {
   src: string;
   title: string;
   onProgress?: (progress: number) => void;
+  thumbnailUrl?: string;
 }
 
-export default function SignLanguageVideo({ src, title, onProgress }: SignLanguageVideoProps) {
+export default function SignLanguageVideo({ src, title, onProgress, thumbnailUrl }: SignLanguageVideoProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
 
-  // When user clicks play, show the iframe and start tracking progress
   const handlePlay = () => {
     setShowVideo(true);
-    // Start progress tracking
     if (onProgress) {
-      setTimeout(() => onProgress(100), 5000); // Mark as complete after 5 seconds of viewing
+      setTimeout(() => onProgress(100), 5000);
     }
   };
 
@@ -26,6 +26,19 @@ export default function SignLanguageVideo({ src, title, onProgress }: SignLangua
     <Card className="overflow-hidden">
       {!showVideo ? (
         <div className="aspect-video bg-muted relative group cursor-pointer" onClick={handlePlay}>
+          {thumbnailUrl ? (
+            <img 
+              src={thumbnailUrl} 
+              alt={title} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+              <div className="text-4xl font-bold text-primary/20">
+                {title.split(' ').pop()}
+              </div>
+            </div>
+          )}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative z-10">
               <Button size="lg" variant="ghost" className="rounded-full">
@@ -45,17 +58,13 @@ export default function SignLanguageVideo({ src, title, onProgress }: SignLangua
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           )}
-          <iframe
+          <video
             className="w-full h-full"
-            src={`${src}#video`}
+            src={src}
             title={title}
-            onLoad={() => setIsLoading(false)}
-            style={{
-              border: "none",
-              overflow: "hidden",
-              marginTop: "-100px", // Adjust to focus on video content
-              height: "calc(100% + 200px)" // Compensate for margin
-            }}
+            controls
+            onLoadedData={() => setIsLoading(false)}
+            autoPlay
           />
         </div>
       )}

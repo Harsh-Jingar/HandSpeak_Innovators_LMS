@@ -86,6 +86,7 @@ export default function LessonPage() {
             <SignLanguageVideo
               src={lesson.videoUrl}
               title={lesson.title}
+              thumbnailUrl={lesson.thumbnailUrl}
               onProgress={(progress) => progressMutation.mutate(progress)}
             />
             <div className="mt-4 bg-background">
