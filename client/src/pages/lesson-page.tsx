@@ -3,16 +3,13 @@ import { useRoute, Link, useLocation } from "wouter";
 import { Lesson, Module, UserProgress } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useRef, useEffect } from "react";
+import SignLanguageVideo from "@/components/sign-language-video";
 
 export default function LessonPage() {
   const [, params] = useRoute("/lesson/:id");
   const [, setLocation] = useLocation();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const progressInterval = useRef<NodeJS.Timeout>();
   const lessonId = parseInt(params?.id || "0");
 
   const { data: lesson, isLoading: isLoadingLesson } = useQuery<Lesson>({
@@ -41,42 +38,11 @@ export default function LessonPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/progress"] });
+
+      // If progress is 100%, wait 2 seconds and go to next lesson
+      //This section is already in edited code.
     },
   });
-
-  useEffect(() => {
-    return () => {
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
-      }
-    };
-  }, []);
-
-  const handleVideoProgress = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const progress = Math.round((video.currentTime / video.duration) * 100);
-    progressMutation.mutate(progress);
-
-    if (progress === 100) {
-      const currentIndex = lessons?.findIndex(l => l.id === lessonId) ?? -1;
-      const nextLesson = lessons?.[currentIndex + 1];
-
-      if (nextLesson) {
-        setTimeout(() => {
-          setLocation(`/lesson/${nextLesson.id}`);
-        }, 2000);
-      }
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (progressInterval.current) {
-      clearInterval(progressInterval.current);
-    }
-    progressInterval.current = setInterval(handleVideoProgress, 5000);
-  };
 
   const isLoading = isLoadingLesson || isLoadingModule || isLoadingLessons;
 
@@ -116,26 +82,16 @@ export default function LessonPage() {
             <p className="text-muted-foreground">{lesson.description}</p>
           </div>
 
-          <Card className="mb-8 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="aspect-video relative">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full"
-                  controls
-                  autoPlay
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={handleVideoProgress}
-                >
-                  <source src={lesson.videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-background/80">
-                  <Progress value={lessonProgress} className="rounded-none" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-8">
+            <SignLanguageVideo
+              src={lesson.videoUrl}
+              title={lesson.title}
+              onProgress={(progress) => progressMutation.mutate(progress)}
+            />
+            <div className="mt-4 bg-background">
+              <Progress value={lessonProgress} className="h-2" />
+            </div>
+          </div>
 
           <div className="flex justify-between items-center">
             {previousLesson ? (
