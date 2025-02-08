@@ -103,76 +103,36 @@ export class MemStorage implements IStorage {
       },
     ];
 
-    // Sample lessons for ASL Alphabet module with actual ASL video URLs
-    const alphabetLessons: Lesson[] = [
-      {
-        id: 1,
-        moduleId: 2,
-        title: "Letter A",
-        description: "Learn how to sign the letter A in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22671.mp4",
-        order: 1,
-        duration: 60,
-      },
-      {
-        id: 2,
-        moduleId: 2,
-        title: "Letter B",
-        description: "Learn how to sign the letter B in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22672.mp4",
-        order: 2,
-        duration: 60,
-      },
-      {
-        id: 3,
-        moduleId: 2,
-        title: "Letter C",
-        description: "Learn how to sign the letter C in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22673.mp4",
-        order: 3,
-        duration: 60,
-      },
-    ];
+    // Sample lessons for ASL Alphabet module
+    const alphabetLessons: Lesson[] = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').map((letter, index) => ({
+      id: index + 1,
+      moduleId: 2, // ASL Alphabet module
+      title: `Letter ${letter}`,
+      description: `Learn how to sign the letter ${letter} in ASL`,
+      videoUrl: `https://www.signasl.org/videos/alphabet/${letter.toLowerCase()}.mp4`,
+      order: index + 1,
+      duration: 60, // 1 minute per letter
+    }));
 
-    // Sample lessons for Numbers module with actual ASL video URLs
-    const numberLessons: Lesson[] = [
-      {
-        id: 27,
-        moduleId: 1,
-        title: "Number 1",
-        description: "Learn how to sign the number 1 in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22799.mp4",
-        order: 1,
-        duration: 45,
-      },
-      {
-        id: 28,
-        moduleId: 1,
-        title: "Number 2",
-        description: "Learn how to sign the number 2 in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22800.mp4",
-        order: 2,
-        duration: 45,
-      },
-      {
-        id: 29,
-        moduleId: 1,
-        title: "Number 3",
-        description: "Learn how to sign the number 3 in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22801.mp4",
-        order: 3,
-        duration: 45,
-      },
-    ];
+    // Sample lessons for Numbers module
+    const numberLessons: Lesson[] = Array.from({ length: 20 }, (_, i) => ({
+      id: 27 + i, // continue after alphabet
+      moduleId: 1, // ASL Numbers module
+      title: `Number ${i + 1}`,
+      description: `Learn how to sign the number ${i + 1} in ASL`,
+      videoUrl: `https://www.signasl.org/videos/numbers/${i + 1}.mp4`,
+      order: i + 1,
+      duration: 45, // 45 seconds per number
+    }));
 
-    // Sample lessons for Basic Greetings with actual ASL video URLs
+    // Sample lessons for Basic Greetings
     const greetingLessons: Lesson[] = [
       {
         id: 47,
         moduleId: 3,
         title: "Hello",
         description: "Learn to say 'Hello' in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22914.mp4",
+        videoUrl: "https://www.signasl.org/videos/greetings/hello.mp4",
         order: 1,
         duration: 90,
       },
@@ -181,7 +141,7 @@ export class MemStorage implements IStorage {
         moduleId: 3,
         title: "How are you?",
         description: "Learn to ask 'How are you?' in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22915.mp4",
+        videoUrl: "https://www.signasl.org/videos/greetings/how_are_you.mp4",
         order: 2,
         duration: 120,
       },
@@ -190,15 +150,16 @@ export class MemStorage implements IStorage {
         moduleId: 3,
         title: "Good morning",
         description: "Learn to say 'Good morning' in ASL",
-        videoUrl: "https://www.signingsavvy.com/media/mp4-ld/22/22916.mp4",
+        videoUrl: "https://www.signasl.org/videos/greetings/good_morning.mp4",
         order: 3,
         duration: 90,
       },
     ];
 
-    // Add all data to storage
     sampleCourses.forEach(course => this.courses.set(course.id, course));
     sampleModules.forEach(module => this.modules.set(module.id, module));
+
+    // Add all lessons
     [...alphabetLessons, ...numberLessons, ...greetingLessons].forEach(lesson => 
       this.lessons.set(lesson.id, lesson)
     );
