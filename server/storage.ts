@@ -1,5 +1,5 @@
-import { users, courses, userProgress } from "@shared/schema";
-import type { User, InsertUser, Course, UserProgress } from "@shared/schema";
+import { users, courses, modules, userProgress } from "@shared/schema";
+import type { User, InsertUser, Course, Module, UserProgress } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -11,14 +11,16 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getCourses(): Promise<Course[]>;
   getCourse(id: number): Promise<Course | undefined>;
+  getModules(courseId: number): Promise<Module[]>;
   getUserProgress(userId: number): Promise<UserProgress[]>;
-  updateProgress(userId: number, courseId: number, progress: number): Promise<void>;
+  updateProgress(userId: number, moduleId: number, progress: number): Promise<void>;
   sessionStore: session.SessionStore;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private courses: Map<number, Course>;
+  private modules: Map<number, Module>;
   private progress: Map<string, UserProgress>;
   currentId: number;
   sessionStore: session.SessionStore;
@@ -26,17 +28,18 @@ export class MemStorage implements IStorage {
   constructor() {
     this.users = new Map();
     this.courses = new Map();
+    this.modules = new Map();
     this.progress = new Map();
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
 
-    // Seed courses
-    this.seedCourses();
+    // Seed courses and modules
+    this.seedCoursesAndModules();
   }
 
-  private seedCourses() {
+  private seedCoursesAndModules() {
     const sampleCourses: Course[] = [
       {
         id: 1,
@@ -67,7 +70,77 @@ export class MemStorage implements IStorage {
       },
     ];
 
+    const sampleModules: Module[] = [
+      // ASL Modules
+      {
+        id: 1,
+        courseId: 1,
+        title: "ASL Numbers (1-20)",
+        description: "Learn to count and express numbers in ASL",
+        type: "numbers",
+        videoUrl: "https://example.com/asl/numbers.mp4",
+        order: 1,
+      },
+      {
+        id: 2,
+        courseId: 1,
+        title: "ASL Alphabet",
+        description: "Master the ASL alphabet and fingerspelling",
+        type: "alphabets",
+        videoUrl: "https://example.com/asl/alphabet.mp4",
+        order: 2,
+      },
+      {
+        id: 3,
+        courseId: 1,
+        title: "Basic Greetings",
+        description: "Learn common greetings and introductions",
+        type: "words",
+        videoUrl: "https://example.com/asl/greetings.mp4",
+        order: 3,
+      },
+      // BSL Modules
+      {
+        id: 4,
+        courseId: 2,
+        title: "BSL Numbers (1-20)",
+        description: "Learn to count in British Sign Language",
+        type: "numbers",
+        videoUrl: "https://example.com/bsl/numbers.mp4",
+        order: 1,
+      },
+      {
+        id: 5,
+        courseId: 2,
+        title: "BSL Alphabet",
+        description: "Learn the BSL alphabet",
+        type: "alphabets",
+        videoUrl: "https://example.com/bsl/alphabet.mp4",
+        order: 2,
+      },
+      // ISL Modules
+      {
+        id: 6,
+        courseId: 3,
+        title: "ISL Numbers (1-20)",
+        description: "Learn to count in Indian Sign Language",
+        type: "numbers",
+        videoUrl: "https://example.com/isl/numbers.mp4",
+        order: 1,
+      },
+      {
+        id: 7,
+        courseId: 3,
+        title: "ISL Alphabet",
+        description: "Master the ISL alphabet",
+        type: "alphabets",
+        videoUrl: "https://example.com/isl/alphabet.mp4",
+        order: 2,
+      },
+    ];
+
     sampleCourses.forEach(course => this.courses.set(course.id, course));
+    sampleModules.forEach(module => this.modules.set(module.id, module));
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -95,14 +168,20 @@ export class MemStorage implements IStorage {
     return this.courses.get(id);
   }
 
+  async getModules(courseId: number): Promise<Module[]> {
+    return Array.from(this.modules.values())
+      .filter(m => m.courseId === courseId)
+      .sort((a, b) => a.order - b.order);
+  }
+
   async getUserProgress(userId: number): Promise<UserProgress[]> {
     return Array.from(this.progress.values()).filter(p => p.userId === userId);
   }
 
-  async updateProgress(userId: number, courseId: number, progress: number): Promise<void> {
-    const key = `${userId}-${courseId}`;
+  async updateProgress(userId: number, moduleId: number, progress: number): Promise<void> {
+    const key = `${userId}-${moduleId}`;
     const existing = this.progress.get(key);
-    
+
     if (existing) {
       this.progress.set(key, {
         ...existing,
@@ -113,7 +192,7 @@ export class MemStorage implements IStorage {
       this.progress.set(key, {
         id: this.currentId++,
         userId,
-        courseId,
+        moduleId,
         progress,
         completed: progress === 100
       });

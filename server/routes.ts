@@ -20,6 +20,11 @@ export function registerRoutes(app: Express): Server {
     res.json(course);
   });
 
+  app.get("/api/courses/:id/modules", async (req, res) => {
+    const modules = await storage.getModules(parseInt(req.params.id));
+    res.json(modules);
+  });
+
   app.get("/api/progress", async (req, res) => {
     if (!req.user) {
       res.status(401).send("Unauthorized");
@@ -29,21 +34,21 @@ export function registerRoutes(app: Express): Server {
     res.json(progress);
   });
 
-  app.post("/api/progress/:courseId", async (req, res) => {
+  app.post("/api/progress/:moduleId", async (req, res) => {
     if (!req.user) {
       res.status(401).send("Unauthorized");
       return;
     }
-    
-    const courseId = parseInt(req.params.courseId);
+
+    const moduleId = parseInt(req.params.moduleId);
     const progress = parseInt(req.body.progress);
-    
+
     if (isNaN(progress) || progress < 0 || progress > 100) {
       res.status(400).send("Invalid progress value");
       return;
     }
 
-    await storage.updateProgress(req.user.id, courseId, progress);
+    await storage.updateProgress(req.user.id, moduleId, progress);
     res.sendStatus(200);
   });
 
