@@ -4,9 +4,10 @@ import { Course, Module, UserProgress } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ArrowLeft, Play, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, Play, CheckCircle2, Clock, BookOpen, Award, Star, Users } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Navbar } from "@/components/layout/navbar";
 
 export default function CoursePage() {
   const [, params] = useRoute("/course/:id");
@@ -38,70 +39,204 @@ export default function CoursePage() {
     return <div>Course not found</div>;
   }
 
+  const totalLessons = modules.reduce((acc, module) => acc + module.lessons, 0);
+  const totalProgress = progress
+    ? Math.round(
+        (progress.reduce((acc, p) => acc + p.progress, 0) / modules.length) * 100
+      )
+    : 0;
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Courses
-            </Button>
-          </Link>
+      <Navbar />
+      
+      {/* Course Header */}
+      <header className="pt-16 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10">
+        <div className="container mx-auto px-4 py-12">
+          <div className="max-w-7xl mx-auto">
+            <Link href="/">
+              <Button variant="ghost" size="sm" className="mb-8">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Courses
+              </Button>
+            </Link>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+              {/* Course Info */}
+              <div className="lg:col-span-2">
+                <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
+                <p className="text-xl text-muted-foreground mb-6">{course.description}</p>
+                
+                <div className="flex flex-wrap gap-6 mb-8">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                    <span className="font-medium">4.8</span>
+                    <span className="text-muted-foreground">(2.1k reviews)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <span>12.5k students enrolled</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                    <span>{course.durationHours} hours</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    <span>{totalLessons} lessons</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button size="lg" className="px-8">
+                    Start Learning
+                  </Button>
+                  {progress && progress.length > 0 && (
+                    <div className="flex items-center gap-4">
+                      <Progress value={totalProgress} className="w-48" />
+                      <span className="text-sm text-muted-foreground">
+                        {totalProgress}% Complete
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Course Preview */}
+              <div className="relative">
+                <div className="aspect-video rounded-lg overflow-hidden shadow-xl">
+                  <img
+                    src={course.imageUrl}
+                    alt={course.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Button variant="outline" className="text-white border-white hover:bg-white/20">
+                      <Play className="h-6 w-6 mr-2" />
+                      Watch Preview
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-3xl mx-auto">
-          <img
-            src={course.imageUrl}
-            alt={course.title}
-            className="w-full h-64 object-cover rounded-lg mb-8"
-          />
+      {/* Course Content */}
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Module List */}
+            <div className="lg:col-span-2">
+              <h2 className="text-2xl font-bold mb-6">Course Content</h2>
+              <div className="space-y-4">
+                {modules.map((module, index) => {
+                  // Calculate module progress by averaging the progress of its lessons
+                  const moduleLessons = progress?.filter(p => p.lessonId >= (module.id * 100) && p.lessonId < ((module.id + 1) * 100)) || [];
+                  const moduleProgress = moduleLessons.length > 0
+                    ? moduleLessons.reduce((acc, curr) => acc + curr.progress, 0) / moduleLessons.length
+                    : 0;
 
-          <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
-          <p className="text-muted-foreground mb-8">{course.description}</p>
-
-          <div className="grid gap-4">
-            {modules.map((module) => {
-              const moduleProgress = progress?.find(p => p.moduleId === module.id)?.progress || 0;
-
-              return (
-                <Card key={module.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-grow">
-                        <h3 className="text-xl font-semibold mb-2">{module.title}</h3>
-                        <p className="text-muted-foreground mb-4">{module.description}</p>
-                        <div className="flex items-center gap-4">
-                          <Progress value={moduleProgress} className="w-48" />
-                          <span className="text-sm text-muted-foreground">
-                            {moduleProgress}% Complete
-                          </span>
+                  return (
+                    <Card key={module.id} className="overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="p-6 hover:bg-muted/50 transition-colors">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-grow">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="text-lg font-medium text-muted-foreground">
+                                  Module {index + 1}
+                                </span>
+                                {moduleProgress === 100 && (
+                                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                )}
+                              </div>
+                              <h3 className="text-xl font-semibold mb-2">{module.title}</h3>
+                              <p className="text-muted-foreground mb-4">{module.description}</p>
+                              <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm">{module.lessons} lessons</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <Progress value={moduleProgress} className="w-32" />
+                                  <span className="text-sm text-muted-foreground">
+                                    {moduleProgress}% Complete
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <Link href={`/module/${module.id}`}>
+                              <Button variant="secondary" className="shrink-0">
+                                {moduleProgress === 100 ? (
+                                  <>
+                                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                                    Review
+                                  </>
+                                ) : (
+                                  <>
+                                    <Play className="h-4 w-4 mr-2" />
+                                    {moduleProgress > 0 ? 'Continue' : 'Start'}
+                                  </>
+                                )}
+                              </Button>
+                            </Link>
+                          </div>
                         </div>
-                      </div>
-                      <div className="ml-4">
-                        <Link href={`/module/${module.id}`}>
-                          <Button className="flex items-center gap-2">
-                            {moduleProgress === 100 ? (
-                              <>
-                                <CheckCircle2 className="h-4 w-4" />
-                                Review
-                              </>
-                            ) : (
-                              <>
-                                <Play className="h-4 w-4" />
-                                {moduleProgress > 0 ? 'Continue' : 'Start'}
-                              </>
-                            )}
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Course Info Sidebar */}
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">What you'll learn</h3>
+                  <ul className="space-y-3">
+                    <li className="flex gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      <span>Master essential sign language vocabulary and phrases</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      <span>Understand grammar and sentence structure in sign language</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      <span>Practice real-world conversations and scenarios</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                      <span>Build confidence in sign language communication</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold mb-4">Course Features</h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-3 text-sm">
+                      <Award className="h-5 w-5 text-primary" />
+                      <span>Certificate of completion</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm">
+                      <Clock className="h-5 w-5 text-primary" />
+                      <span>Self-paced learning</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-sm">
+                      <Users className="h-5 w-5 text-primary" />
+                      <span>Community support</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </main>

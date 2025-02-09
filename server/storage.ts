@@ -17,7 +17,7 @@ export interface IStorage {
   getLesson(id: number): Promise<Lesson | undefined>;
   getUserProgress(userId: number): Promise<UserProgress[]>;
   updateProgress(userId: number, lessonId: number, progress: number): Promise<void>;
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -27,7 +27,7 @@ export class MemStorage implements IStorage {
   private lessons: Map<number, Lesson>;
   private progress: Map<string, UserProgress>;
   currentId: number;
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -44,125 +44,345 @@ export class MemStorage implements IStorage {
     this.seedCoursesAndModules();
   }
 
+  private generateNumberLessons(startId: number, moduleId: number, language: string): Lesson[] {
+    const lessons: Lesson[] = [];
+    for (let i = 1; i <= 10; i++) {
+      lessons.push({
+        id: startId + i - 1,
+        moduleId,
+        title: `Number ${i}`,
+        description: `Learn to sign number ${i} in ${language}`,
+        content: `Learn how to sign the number ${i} in ${language}`,
+        videoUrl: `https://example.com/videos/${language.toLowerCase()}/numbers/${i}.mp4`,
+        thumbnailUrl: `https://example.com/thumbnails/${language.toLowerCase()}/numbers/${i}.jpg`,
+        order: i,
+        duration: 180,
+        keyPoints: [
+          `Hand position for number ${i}`,
+          "Common mistakes to avoid",
+          "Practice exercises"
+        ],
+        practiceExercises: [
+          {
+            type: "record",
+            title: `Practice Number ${i}`,
+            description: `Record yourself signing number ${i}`,
+            content: {
+              prompt: `Sign number ${i}`
+            }
+          }
+        ],
+        resources: [
+          {
+            type: "pdf",
+            title: `${language} Number ${i} Guide`,
+            description: `Guide for signing number ${i}`,
+            url: `/resources/${language.toLowerCase()}/numbers/number-${i}.pdf`
+          }
+        ]
+      });
+    }
+    return lessons;
+  }
+
+  private generateAlphabetLessons(startId: number, moduleId: number, language: string): Lesson[] {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    return letters.map((letter, index) => ({
+      id: startId + index,
+      moduleId,
+      title: `Letter ${letter}`,
+      description: `Learn to sign letter ${letter} in ${language}`,
+      content: `Learn how to sign the letter ${letter} in ${language}`,
+      videoUrl: `https://example.com/videos/${language.toLowerCase()}/alphabet/${letter.toLowerCase()}.mp4`,
+      thumbnailUrl: `https://example.com/thumbnails/${language.toLowerCase()}/alphabet/${letter.toLowerCase()}.jpg`,
+      order: index + 1,
+      duration: 180,
+      keyPoints: [
+        `Hand position for letter ${letter}`,
+        "Common mistakes to avoid",
+        "Practice exercises"
+      ],
+      practiceExercises: [
+        {
+          type: "record",
+          title: `Practice Letter ${letter}`,
+          description: `Record yourself signing letter ${letter}`,
+          content: {
+            prompt: `Sign letter ${letter}`
+          }
+        }
+      ],
+      resources: [
+        {
+          type: "pdf",
+          title: `${language} Letter ${letter} Guide`,
+          description: `Guide for signing letter ${letter}`,
+          url: `/resources/${language.toLowerCase()}/alphabet/letter-${letter.toLowerCase()}.pdf`
+        }
+      ]
+    }));
+  }
+
   private seedCoursesAndModules() {
+    // Create the three main courses
     const sampleCourses: Course[] = [
       {
         id: 1,
-        title: "ASL Basics",
-        description: "Learn the fundamentals of American Sign Language",
+        title: "American Sign Language (ASL)",
+        description: "Learn American Sign Language (ASL) - Alphabet, Numbers, and Basic Greetings",
         language: "ASL",
-        imageUrl: "https://images.unsplash.com/photo-1499244571948-7ccddb3583f1",
-        lessons: 12,
-        durationHours: 24,
+        imageUrl: "/courses/asl-course.jpg",
+        lessons: 39, // 26 alphabet + 10 numbers + 3 greetings
+        durationHours: 10,
+        level: "beginner",
+        category: "comprehensive"
       },
       {
         id: 2,
-        title: "BSL for Beginners",
-        description: "Start your journey with British Sign Language",
+        title: "British Sign Language (BSL)",
+        description: "Learn British Sign Language (BSL) - Alphabet, Numbers, and Basic Greetings",
         language: "BSL",
-        imageUrl: "https://images.unsplash.com/photo-1518893494013-481c1d8ed3fd",
-        lessons: 10,
-        durationHours: 20,
+        imageUrl: "/courses/bsl-course.jpg",
+        lessons: 39,
+        durationHours: 10,
+        level: "beginner",
+        category: "comprehensive"
       },
       {
         id: 3,
-        title: "ISL Fundamentals",
-        description: "Master Indian Sign Language basics",
+        title: "Indian Sign Language (ISL)",
+        description: "Learn Indian Sign Language (ISL) - Alphabet, Numbers, and Basic Greetings",
         language: "ISL",
-        imageUrl: "https://images.unsplash.com/photo-1494178270175-e96de2971df9",
-        lessons: 15,
-        durationHours: 30,
-      },
+        imageUrl: "/courses/isl-course.jpg",
+        lessons: 39,
+        durationHours: 10,
+        level: "beginner",
+        category: "comprehensive"
+      }
     ];
 
+    // Add courses to storage
+    sampleCourses.forEach(course => this.courses.set(course.id, course));
+
+    // Create modules for each course (3 modules per course)
     const sampleModules: Module[] = [
       // ASL Modules
       {
         id: 1,
         courseId: 1,
-        title: "ASL Numbers (1-20)",
-        description: "Learn to count and express numbers in ASL",
-        type: "numbers",
+        title: "ASL Alphabet",
+        description: "Learn the ASL alphabet - 26 letters",
+        type: "alphabets",
         order: 1,
+        lessons: 26
       },
       {
         id: 2,
         courseId: 1,
-        title: "ASL Alphabet",
-        description: "Master the ASL alphabet and fingerspelling",
-        type: "alphabets",
+        title: "ASL Numbers",
+        description: "Learn numbers 1-10 in ASL",
+        type: "numbers",
         order: 2,
+        lessons: 10
       },
       {
         id: 3,
         courseId: 1,
-        title: "Basic Greetings",
-        description: "Learn common greetings and introductions",
-        type: "words",
+        title: "ASL Basic Words & Greetings",
+        description: "Learn essential greetings and phrases in ASL",
+        type: "greetings",
         order: 3,
+        lessons: 3
       },
-    ];
 
-    // Sample lessons for ASL Alphabet module
-    const alphabetLessons: Lesson[] = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').map((letter, index) => ({
-      id: index + 1,
-      moduleId: 2, // ASL Alphabet module
-      title: `Letter ${letter}`,
-      description: `Learn how to sign the letter ${letter} in ASL`,
-      videoUrl: `https://www.signasl.org/sign/${letter.toLowerCase()}`,
-      order: index + 1,
-      duration: 60, // 1 minute per letter
-    }));
-
-    // Sample lessons for Numbers module
-    const numberLessons: Lesson[] = Array.from({ length: 20 }, (_, i) => ({
-      id: 27 + i, // continue after alphabet
-      moduleId: 1, // ASL Numbers module
-      title: `Number ${i + 1}`,
-      description: `Learn how to sign the number ${i + 1} in ASL`,
-      videoUrl: `https://www.signasl.org/sign/${i + 1}`,
-      order: i + 1,
-      duration: 45, // 45 seconds per number
-    }));
-
-    // Sample lessons for Basic Greetings
-    const greetingLessons: Lesson[] = [
+      // BSL Modules
       {
-        id: 47,
-        moduleId: 3,
-        title: "Hello",
-        description: "Learn to say 'Hello' in ASL",
-        videoUrl: "https://www.signasl.org/sign/hello",
+        id: 4,
+        courseId: 2,
+        title: "BSL Alphabet",
+        description: "Learn the BSL alphabet - 26 letters",
+        type: "alphabets",
         order: 1,
-        duration: 90,
+        lessons: 26
       },
       {
-        id: 48,
-        moduleId: 3,
-        title: "How are you?",
-        description: "Learn to ask 'How are you?' in ASL",
-        videoUrl: "https://www.signasl.org/sign/how-are-you",
+        id: 5,
+        courseId: 2,
+        title: "BSL Numbers",
+        description: "Learn numbers 1-10 in BSL",
+        type: "numbers",
         order: 2,
-        duration: 120,
+        lessons: 10
       },
       {
-        id: 49,
-        moduleId: 3,
-        title: "Good morning",
-        description: "Learn to say 'Good morning' in ASL",
-        videoUrl: "https://www.signasl.org/sign/good-morning",
+        id: 6,
+        courseId: 2,
+        title: "BSL Basic Words & Greetings",
+        description: "Learn essential greetings and phrases in BSL",
+        type: "greetings",
         order: 3,
-        duration: 90,
+        lessons: 3
       },
+
+      // ISL Modules
+      {
+        id: 7,
+        courseId: 3,
+        title: "ISL Alphabet",
+        description: "Learn the ISL alphabet - 26 letters",
+        type: "alphabets",
+        order: 1,
+        lessons: 26
+      },
+      {
+        id: 8,
+        courseId: 3,
+        title: "ISL Numbers",
+        description: "Learn numbers 1-10 in ISL",
+        type: "numbers",
+        order: 2,
+        lessons: 10
+      },
+      {
+        id: 9,
+        courseId: 3,
+        title: "ISL Basic Words & Greetings",
+        description: "Learn essential greetings and phrases in ISL",
+        type: "greetings",
+        order: 3,
+        lessons: 3
+      }
     ];
 
-    sampleCourses.forEach(course => this.courses.set(course.id, course));
+    // Add modules to storage
     sampleModules.forEach(module => this.modules.set(module.id, module));
 
-    // Add all lessons
-    [...alphabetLessons, ...numberLessons, ...greetingLessons].forEach(lesson =>
-      this.lessons.set(lesson.id, lesson)
-    );
+    // Generate lessons for each module
+    let currentLessonId = 1;
+
+    sampleModules.forEach(module => {
+      let moduleLessons: Lesson[] = [];
+      const language = module.title.split(" ")[0];
+
+      if (module.type === "alphabets") {
+        moduleLessons = this.generateAlphabetLessons(currentLessonId, module.id, language);
+      } else if (module.type === "numbers") {
+        moduleLessons = this.generateNumberLessons(currentLessonId, module.id, language);
+      } else if (module.type === "greetings") {
+        const greetingsLessons = [
+          {
+            id: currentLessonId,
+            moduleId: module.id,
+            title: "Hello and Goodbye",
+            description: `Learn basic greetings in ${language}`,
+            content: `Learn how to say hello, hi, and goodbye in ${language}`,
+            videoUrl: `/videos/${language.toLowerCase()}/greetings/hello-goodbye.mp4`,
+            thumbnailUrl: `/thumbnails/${language.toLowerCase()}/greetings/hello-goodbye.jpg`,
+            order: 1,
+            duration: 180,
+            keyPoints: [
+              `Basic ${language} greetings`,
+              "Different ways to say hello",
+              "How to say goodbye",
+              "Common greeting etiquette"
+            ],
+            practiceExercises: [
+              {
+                type: "record",
+                title: "Practice Hello and Goodbye",
+                description: "Record yourself signing hello and goodbye",
+                content: {
+                  prompt: "Sign 'hello' and 'goodbye'"
+                }
+              }
+            ],
+            resources: [
+              {
+                type: "pdf",
+                title: `${language} Greetings Guide`,
+                description: "Guide for basic greetings",
+                url: `/resources/${language.toLowerCase()}/greetings/guide.pdf`
+              }
+            ]
+          },
+          {
+            id: currentLessonId + 1,
+            moduleId: module.id,
+            title: "How are you?",
+            description: `Learn to ask and respond to 'How are you?' in ${language}`,
+            content: `Learn common phrases for asking and responding to 'How are you?' in ${language}`,
+            videoUrl: `/videos/${language.toLowerCase()}/greetings/how-are-you.mp4`,
+            thumbnailUrl: `/thumbnails/${language.toLowerCase()}/greetings/how-are-you.jpg`,
+            order: 2,
+            duration: 180,
+            keyPoints: [
+              "Asking 'How are you?'",
+              "Common responses",
+              "Facial expressions",
+              "Conversation flow"
+            ],
+            practiceExercises: [
+              {
+                type: "record",
+                title: "Practice Questions",
+                description: "Record yourself asking 'How are you?'",
+                content: {
+                  prompt: "Sign 'How are you?'"
+                }
+              }
+            ],
+            resources: [
+              {
+                type: "pdf",
+                title: `${language} Questions Guide`,
+                description: "Guide for asking questions",
+                url: `/resources/${language.toLowerCase()}/greetings/questions.pdf`
+              }
+            ]
+          },
+          {
+            id: currentLessonId + 2,
+            moduleId: module.id,
+            title: "Nice to meet you",
+            description: `Learn to say 'Nice to meet you' in ${language}`,
+            content: `Learn how to introduce yourself and say 'Nice to meet you' in ${language}`,
+            videoUrl: `/videos/${language.toLowerCase()}/greetings/nice-to-meet-you.mp4`,
+            thumbnailUrl: `/thumbnails/${language.toLowerCase()}/greetings/nice-to-meet-you.jpg`,
+            order: 3,
+            duration: 180,
+            keyPoints: [
+              "Introducing yourself",
+              "Saying 'Nice to meet you'",
+              "Proper handshake etiquette",
+              "Follow-up phrases"
+            ],
+            practiceExercises: [
+              {
+                type: "record",
+                title: "Practice Introductions",
+                description: "Record yourself saying 'Nice to meet you'",
+                content: {
+                  prompt: "Sign 'Nice to meet you'"
+                }
+              }
+            ],
+            resources: [
+              {
+                type: "pdf",
+                title: `${language} Introductions Guide`,
+                description: "Guide for introductions",
+                url: `/resources/${language.toLowerCase()}/greetings/introductions.pdf`
+              }
+            ]
+          }
+        ];
+        moduleLessons = greetingsLessons;
+      }
+
+      // Add lessons to storage
+      moduleLessons.forEach(lesson => this.lessons.set(lesson.id, lesson));
+      currentLessonId += moduleLessons.length;
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -230,7 +450,8 @@ export class MemStorage implements IStorage {
         userId,
         lessonId,
         progress,
-        completed: progress === 100
+        completed: progress === 100,
+        practiceResults: null
       });
     }
   }

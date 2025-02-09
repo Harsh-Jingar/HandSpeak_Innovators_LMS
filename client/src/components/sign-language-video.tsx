@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,11 +13,22 @@ interface SignLanguageVideoProps {
 export default function SignLanguageVideo({ src, title, onProgress, thumbnailUrl }: SignLanguageVideoProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlay = () => {
     setShowVideo(true);
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current && onProgress) {
+      const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      onProgress(Math.round(progress));
+    }
+  };
+
+  const handleEnded = () => {
     if (onProgress) {
-      setTimeout(() => onProgress(100), 5000);
+      onProgress(100);
     }
   };
 
@@ -52,19 +62,21 @@ export default function SignLanguageVideo({ src, title, onProgress, thumbnailUrl
           </div>
         </div>
       ) : (
-        <div className="aspect-video relative">
+        <div className="aspect-video bg-muted relative">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background">
+            <div className="absolute inset-0 flex items-center justify-center bg-muted">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           )}
           <video
-            className="w-full h-full"
+            ref={videoRef}
             src={src}
-            title={title}
             controls
-            onLoadedData={() => setIsLoading(false)}
             autoPlay
+            className="w-full h-full"
+            onLoadedData={() => setIsLoading(false)}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleEnded}
           />
         </div>
       )}

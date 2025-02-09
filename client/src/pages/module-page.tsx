@@ -40,22 +40,13 @@ export default function ModulePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <Link href={`/course/${module.courseId}`}>
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Course
-            </Button>
-          </Link>
+          <h1 className="text-2xl font-bold">{module.title}</h1>
+          <p className="text-muted-foreground mt-2">{module.description}</p>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-4">{module.title}</h1>
-            <p className="text-muted-foreground">{module.description}</p>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {lessons.map((lesson) => {
               const lessonProgress = progress?.find(p => p.lessonId === lesson.id)?.progress || 0;
