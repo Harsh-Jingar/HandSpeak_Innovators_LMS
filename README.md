@@ -111,19 +111,6 @@ HandSpeak was built entirely from scratch by a single developer. This project de
 - Database design and implementation
 - UI/UX design and implementation
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔮 Future Roadmap
-
-- Mobile application for on-the-go learning
-- Additional sign languages (JSL, CSL, etc.)
-- Advanced vocabulary and phrase courses
-- Community features for practice partners
-- Gamification elements for enhanced engagement
-- AI-powered personalized learning paths
-
 ---
 
 Developed with ❤️ by <a href="https://github.com/Harsh-Jingar">Harsh Jingar</a>
